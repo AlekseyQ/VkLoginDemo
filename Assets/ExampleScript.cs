@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
+using System.Collections.Generic;
 using LitJson;
 
 public class ExampleScript : MonoBehaviour {
@@ -112,4 +113,31 @@ public class ExampleScript : MonoBehaviour {
         infoText.text += "\nLogoutVK";
     }
 
+    public void DoTest()
+    {
+        vkUnity.DoUsersGetRequest((VKResponse response) =>
+        {
+            infoText.text += "\nDoUsersGetRequest >> " + (response != null ? response.json.ToJson() : "null");
+            if(response != null)
+            {
+                VKResponseObject obj = LitJson.JsonMapper.ToObject<VKResponseObject>(response.json.ToJson());
+                infoText.text += "\nDoUsersGetRequest parse >> count " + obj.response.Count;
+                for (int i = 0; i < obj.response.Count; ++i)
+                {
+                    string outStr = "";
+                    foreach (string k in obj.response[i].Keys)
+                    {
+                        outStr += k + "> " + obj.response[i][k] + ", ";
+                    }
+                    infoText.text += "\nDoUsersGetRequest parse " + i + " >> " + outStr;
+                }
+            }
+        }, (VKError error) =>
+        {
+            infoText.text += "\nDoUsersGetRequest >> error! > " + (error != null ? LitJson.JsonMapper.ToJson(error) : "null");
+        }, (VKRequest request, int attemptNumber, int totalAttempts) =>
+        {
+            infoText.text += "\nDoUsersGetRequest >> attempt " + attemptNumber + " (" + totalAttempts + ") > " + (request != null ? LitJson.JsonMapper.ToJson(request) : "null");
+        }, VKApiConst.FIELDS, "uid,first_name,last_name");
+    }
 }

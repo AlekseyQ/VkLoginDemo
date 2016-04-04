@@ -35,6 +35,11 @@ public class VKUnity : MonoBehaviour
         vkUnity.InitPlugin();
     }
 
+    public VKUnityPlugin GetPlugin()
+    {
+        return vkUnity;
+    }
+
     public void RegisterAccessTokenTracker(VKAccessTokenChangedHandler accessTokenChangedHandler)
     {
         vkUnity.RegisterAccessTokenTracker(accessTokenChangedHandler);
@@ -87,5 +92,11 @@ public class VKUnity : MonoBehaviour
         }
         return res;
     }
+
+    public void DoUsersGetRequest(DoUsersGetRequestCompleteHandler completeCallback, DoUsersGetRequestErrorHandler errorCallback, DoUsersGetRequestAttemptFailHandler attemptFailedCallback, params string[] args)
+    {
+        vkUnity.DoUsersGetRequest(completeCallback, errorCallback, attemptFailedCallback, args);
+    }
+
 
 }

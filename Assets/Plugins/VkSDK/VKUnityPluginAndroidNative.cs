@@ -3,6 +3,7 @@ using System.Collections;
 
 public class VKUnityPluginAndroidNative
 {
+    public delegate void VKCallback(string res);
 
     public delegate void LoginVKCallbackDone(string res);
     public delegate void LoginVKCallbackFail(string res);
@@ -36,13 +37,11 @@ public class VKUnityPluginAndroidNative
         MonoBehaviour obj = (MonoBehaviour)handler.Target;
         GameObject gameObject = obj.gameObject;
 
-        Debug.Log("RegisterAccessTokenTracker ========================== gameObject.name = " + gameObject.name + ", handler.Method.Name = " + handler.Method.Name);
-
         if (Application.platform == RuntimePlatform.Android)
         {
             if (androidPlugin != null)
             {
-                androidPlugin.Call<string>("registerAccessTokenTracker", gameObject.name, handler.Method.Name);
+                androidPlugin.Call("registerAccessTokenTracker", gameObject.name, handler.Method.Name);
             }
         }
     }
@@ -169,11 +168,11 @@ public class VKUnityPluginAndroidNative
                 }
                 else
                 {
-                    return "null String[] returned";
+                    return null;
                 }
             }
         }
-        return "none123";
+        return null;
     }
 
     public string GetPackageName()
@@ -184,6 +183,43 @@ public class VKUnityPluginAndroidNative
             return str;
         }
         return "androidPlugin == null";
+    }
+
+    public void DoUsersGetRequest(VKCallback completeCallback, VKCallback errorCallback, VKCallback attemptFailedCallback, params string[] args)
+    {
+        if (androidPlugin != null)
+        {
+            if (!(completeCallback.Target is MonoBehaviour))
+            {
+                throw new System.Exception();
+            }
+
+            if (!(errorCallback.Target is MonoBehaviour))
+            {
+                throw new System.Exception();
+            }
+
+            if (!(attemptFailedCallback.Target is MonoBehaviour))
+            {
+                throw new System.Exception();
+            }
+
+            MonoBehaviour completeObj = (MonoBehaviour)completeCallback.Target;
+            GameObject completeGameObject = completeObj.gameObject;
+
+            MonoBehaviour errorObj = (MonoBehaviour)errorCallback.Target;
+            GameObject errorGameObject = errorObj.gameObject;
+
+            MonoBehaviour attemptFailedObj = (MonoBehaviour)attemptFailedCallback.Target;
+            GameObject attemptFailedGameObject = attemptFailedObj.gameObject;
+
+            object[] arrgs = new object[] { currentActivity,
+                completeGameObject.name, completeCallback.Method.Name,
+                errorGameObject.name, errorCallback.Method.Name,
+                attemptFailedGameObject.name, attemptFailedCallback.Method.Name,
+                args };
+            androidPlugin.Call("doUsersGetRequest", arrgs);
+        }
     }
 
 }

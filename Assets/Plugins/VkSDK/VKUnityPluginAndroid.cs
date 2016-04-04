@@ -3,10 +3,11 @@ using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
 using LitJson;
+using System;
 
 class LoginVKHandlerScript : MonoBehaviour
 {
-    private static string RESULT_MAKE_ERROR = "result_failure";
+    private const string RESULT_MAKE_ERROR = "result_failure";
 
     public LoginVKHandlerDoneHandler loginVKHandlerDoneHandler;
     public LoginVKHandlerFailHandler loginVKHandlerFailHandler;
@@ -62,7 +63,7 @@ class LoginVKHandlerScript : MonoBehaviour
 
 class InitVkHandlerScript : MonoBehaviour
 {
-    private static string RESULT_MAKE_ERROR = "result_failure";
+    private const string RESULT_MAKE_ERROR = "result_failure";
 
     public InitVkHandlerDoneHandler initVkHandlerDoneHandler;
     public InitVkHandlerFailHandler initVkHandlerFailHandler;
@@ -136,9 +137,103 @@ class InitVkHandlerScript : MonoBehaviour
     }
 }
 
+class DoUsersGetRequestCompleteHandlerScript : MonoBehaviour
+{
+    private const string RESULT_MAKE_ERROR = "result_failure";
+
+    public DoUsersGetRequestCompleteHandler completeCallback;
+    public DoUsersGetRequestErrorHandler errorCallback;
+    public DoUsersGetRequestAttemptFailHandler attemptFailedCallback;
+
+    public void OnRequestComplete(string res)
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(res))
+            {
+                Debug.LogError("OnRequestComplete: Null result");
+                return;
+            }
+            else if (res.Equals(RESULT_MAKE_ERROR))
+            {
+                Debug.LogError("OnRequestComplete: Internal error");
+                return;
+            }
+
+            JsonData data = JsonMapper.ToObject(res);
+            VKResponse myObject = new VKResponse();
+            myObject.json = data;
+            completeCallback(myObject);
+        }
+        finally
+        {
+            Destroy(gameObject);
+        }
+    }
+
+    [System.Serializable]
+    class RequestAttemptFailedMessage
+    {
+        public VKRequest request;
+        public int attemptNumber;
+        public int totalAttempts;
+    }
+
+    public void OnRequestAttemptFailed(string res)
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(res))
+            {
+                Debug.LogError("OnRequestAttemptFailed: Null result");
+                return;
+            }
+            else if (res.Equals(RESULT_MAKE_ERROR))
+            {
+                Debug.LogError("OnRequestAttemptFailed: Internal error");
+                return;
+            }
+
+
+            RequestAttemptFailedMessage myObject = JsonMapper.ToObject<RequestAttemptFailedMessage>(res);
+            attemptFailedCallback(myObject.request, myObject.attemptNumber, myObject.totalAttempts);
+        }
+        finally
+        {
+            //Destroy(gameObject);
+        }
+    }
+
+    public void OnRequestError(string res)
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(res))
+            {
+                Debug.LogError("OnRequestError: Null result");
+                return;
+            }
+            else if (res.Equals(RESULT_MAKE_ERROR))
+            {
+                Debug.LogError("OnRequestError: Internal error");
+                return;
+            }
+
+
+            VKError myObject = JsonMapper.ToObject<VKError>(res);
+            errorCallback(myObject);
+        }
+        finally
+        {
+            Destroy(gameObject);
+        }
+    }
+
+}
+
 class RegisterAccessTokenTrackerHandlerScript : MonoBehaviour
 {
-    private static string RESULT_MAKE_ERROR = "result_failure";
+    private const string RESULT_MAKE_ERROR = "result_failure";
     public VKAccessTokenChangedHandler accessTokenChangedHandler;
 
     /// <summary>
@@ -338,4 +433,15 @@ public class VKUnityPluginAndroid : MonoBehaviour, VKUnityPlugin
         return vkUnity.GetCertificateFingerprint();
     }
 
+    public void DoUsersGetRequest(DoUsersGetRequestCompleteHandler completeCallback, DoUsersGetRequestErrorHandler errorCallback, DoUsersGetRequestAttemptFailHandler attemptFailedCallback, params string[] args)
+    {
+        GameObject obj = new GameObject("UsersGetRequestHandler" + GetNextSeed());
+        obj.transform.parent = this.transform;
+        DoUsersGetRequestCompleteHandlerScript script = obj.AddComponent<DoUsersGetRequestCompleteHandlerScript>();
+        script.completeCallback = completeCallback;
+        script.errorCallback = errorCallback;
+        script.attemptFailedCallback = attemptFailedCallback;
+
+        vkUnity.DoUsersGetRequest(script.OnRequestComplete, script.OnRequestError, script.OnRequestAttemptFailed, args);
+    }
 }

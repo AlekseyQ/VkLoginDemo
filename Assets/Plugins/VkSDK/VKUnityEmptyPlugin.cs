@@ -5,6 +5,11 @@ using System.Collections.Generic;
 
 public class VKUnityEmptyPlugin : VKUnityPlugin
 {
+    public void DoUsersGetRequest(DoUsersGetRequestCompleteHandler completeCallback, DoUsersGetRequestErrorHandler errorCallback, DoUsersGetRequestAttemptFailHandler attemptFailedCallback, params string[] args)
+    {
+        errorCallback(new VKError());
+    }
+
     public VKAccessToken GetVKAccessToken()
     {
         return null;

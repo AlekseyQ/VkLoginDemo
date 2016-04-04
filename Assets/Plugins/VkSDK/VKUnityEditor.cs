@@ -45,7 +45,8 @@ public sealed class FingerprintsSingleton
         if (matches.Count > 0)
         {
             System.Text.RegularExpressions.Match mat = matches[0];
-            fingerprints = mat.Groups[1].Value;
+            string fingerprintsRaw = mat.Groups[1].Value;
+            fingerprints = fingerprintsRaw.Replace(":", string.Empty);
         }
     }
 
